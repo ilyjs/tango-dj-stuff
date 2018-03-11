@@ -1,6 +1,6 @@
 <template>
     <data-tables :data="data" :actions-def="actionsDef" :checkbox-filter-def="checkFilterDef"
-                 :action-col-def="actionsDef.actionColDef">
+                 :action-col-def="actionsDef">
         <el-table-column v-for="title in titles" :prop="title.prop" :key="title.label" :label="title.label"
                          sortable="custom">
         </el-table-column>
@@ -40,24 +40,22 @@
                         span: 5
                     },
                     def: [{
-                        name: 'new',
-                        handler: () => {
-                            this.data.push({
-                                'content': 'hello world',
-                                'flow_no': 'FW201601010004',
-                                'flow_type': 'Help',
-                                'flow_type_code': 'help',
-                            })
+                        name: 'link to spotify',
+                        handler: (row) => {
+                            console.log(row.instrumentalist);
+                            console.log(row.name);
+                            console.log(row.vocal);
+
+                            // TODO:
+                            // 1. Query Spotify
+                            // 2. Let the user pick ths song
+                            // 3. Get the song ID and song BPM (from metadata)
+                            // 4. Connect to google sheets and upload spotifyID and bpm data to appropriate location
+                            debugger;
                         },
                         buttonProps: {
                             type: 'text'
                         }
-                    }, {
-                        name: 'import',
-                        handler: () => {
-                            this.$message('import clicked')
-                        },
-                        icon: 'upload'
                     }]
                 },
                 checkFilterDef: {
@@ -74,18 +72,9 @@
                     label: 'Actions',
                     def: [{
                         handler: row => {
-                            this.$message('Edit clicked');
-                            row.flow_no = "hello word"
+                            console.log(row);
                         },
-                        name: 'Edit'
-                    }, {
-                        icon: 'message',
-                        type: 'text',
-                        handler: row => {
-                            this.$message('RUA in row clicked');
-                            console.log('RUA in row clicked', row)
-                        },
-                        name: 'RUA'
+                        name: 'Link to spotify'
                     }]
                 }
             }
