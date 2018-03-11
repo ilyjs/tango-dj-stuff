@@ -1,5 +1,9 @@
 <template>
-    <Grid :songs="songs"/>
+    <div>
+        <Grid :songs="songs" v-if="songs.length"/>
+        <div v-if="!songs.length">Loading lol</div>
+    </div>
+
 </template>
 
 <script>
@@ -8,14 +12,15 @@
 
     export default {
         name: 'app',
-
         created() {
             const songs = [];
+            let key = 0;
             fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSndXZzM-gWDDNpt8HqSTPcT32OgHLyJovPYYV98AA-tRO4zlrbk4sV1EqRBYmz0UgMWswtN7M2Bk-j/pub?output=csv').then(a => a.text()).then(a => {
                 csvtojson({noheader: true})
                     .fromString(a)
-                    .on('json', (song) => {
-                        songs.push(song);
+                    .on('csv', ([name, genre, instrumentalist, vocal, year]) => {
+                        key++;
+                        songs.push({name, genre, instrumentalist, vocal, year, key});
                     })
                     .on('done', () => {
                         this.songs = songs;
