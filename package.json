@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "csvtojson": "^1.1.9",
+    "query-string": "^6.0.0",
     "vue": "^2.5.13"
   },
   "devDependencies": {
