@@ -1,14 +1,62 @@
 <template>
+    <div>
+        <el-button type="text" @click="dialogTableVisible = true">open a Table nested Dialog</el-button>
     <data-tables :data="data" :actions-def="actionsDef" :checkbox-filter-def="checkFilterDef"
                  :action-col-def="actionsDef">
         <el-table-column v-for="title in titles" :prop="title.prop" :key="title.label" :label="title.label"
                          sortable="custom">
         </el-table-column>
     </data-tables>
+    <el-button type="text" @click="dialogTableVisible = true">open a Table nested Dialog</el-button>
+        <el-dialog center title="Select audio" :visible.sync="dialogTableVisible">
+            <el-table ref="singleTable" :data="tableSelectData" highlight-current-row @current-change="handleCurrentChange" style="width: 100%">
+                <el-table-column type="index" >
+                </el-table-column>
+                <el-table-column style="width: 20%" property="name" label="Name" >
+                    <template slot-scope="scope">
+                        <i class="el-icon-time"></i>
+                        <span style="margin-left: 10px">{{ scope.row.name }}</span>
+                    </template>
+
+                </el-table-column>
+                <el-table-column style="width: 20%" property="preview_url" label="Preview">
+                    <template  slot-scope="scope">
+                        <aplayer v-if="scope.row.preview_url" mutex
+
+                                 :music="{
+                                    title: scope.row.name,
+                                    author: ' ',
+                                    url:  scope.row.preview_url ,
+                                    pic: scope.row.img,
+                                    lrc: '[00:00.00]lrc here\n[00:01.00]aplayer'
+                                         }"
+                        />
+                        <p v-else> -</p>
+                    </template>
+
+
+                </el-table-column>
+                <el-table-column style="width: 20%" property="spotify" label="Spotify">
+                    <template slot-scope="scope">
+
+                        <a target="_blank" v-bind:href=scope.row.spotify> Open on Spotify </a>
+                    </template>
+                </el-table-column>
+                <el-table-column style="width: 20%"  label="Select track for save">
+                    <template slot-scope="scope">
+                        <el-button type="success" round @click="saveSheets(scope.row.id)">Save</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+
+        </el-dialog>
+    </div>
 </template>
 
 <script>
 import queryString from 'query-string'
+import Aplayer from 'vue-aplayer'
+
     const titles = [{
         prop: "name",
         label: "Name"
@@ -37,7 +85,11 @@ import queryString from 'query-string'
     export default {
         name: 'Grid',
         props: ['songs'],
-        data() {
+      components: {
+        Aplayer,
+      },
+
+      data() {
             return {
                 data: this.songs,
                 titles,
@@ -51,17 +103,43 @@ import queryString from 'query-string'
                             console.log(row.instrumentalist);
                             console.log(row.name);
                             console.log(row.vocal);
+                          const parsedHash = queryString.parse(location.hash);
+                          let instrumentalist = row.instrumentalist.split(',')[0];
+                          if(parsedHash.access_token) {
+                           const {access_token} = parsedHash
+                            const FETCH_URL =  `https://api.spotify.com/v1/search?q=${row.name} ${instrumentalist}&type=track`
+                            fetch(FETCH_URL, {
+                              method: 'GET',
+                              headers: {
+                                'Authorization': `Bearer ${access_token}`,
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                              }
+                            }).then(response =>{
+                              console.log('response1',response)
+                                return response.json()
+
+                              })
+                              .then(json => {
+                                console.log('json', json)
+                                if(json.error){
+                                  if(json.error.status === 401) window.location.replace('https://accounts.spotify.com/authorize?client_id=21c0c52d617f4cb09df75223b6d484a0&redirect_uri=http:%2F%2Flocalhost:8080/&response_type=token')
+                                }
+
+                            this.tableSelectData = json.tracks.items.map(item =>{
+                                 return {name:item.name, preview_url: item.preview_url, spotify: item.external_urls.spotify, img:item.album.images[2].url, id:item.id}
+                                })
+
+
+                              });
+
+                          } else {
+                            window.location.replace('https://accounts.spotify.com/authorize?client_id=21c0c52d617f4cb09df75223b6d484a0&redirect_uri=http:%2F%2Flocalhost:8080/&response_type=token')
+                          }
+
 
                           //window.location.replace('https://accounts.spotify.com/authorize?client_id=21c0c52d617f4cb09df75223b6d484a0&redirect_uri=http:%2F%2Flocalhost:8080/&response_type=token')
 
-                          const FETCH_URL =  "https://api.spotify.com/v1/search?q=MILONGON+Francisco&type=track"
-                          fetch(FETCH_URL, {
-                            method: 'GET',
-                            headers: {
-                              'Authorization': "Bearer BQAyxYYQMmoCMcvHF_KYUO30XLJjQkdqKKrReLZAhJz4rvFGlLcbXoZ6Dlj8BositlQ9XaSf7C7wVlRX2Lm-cdxRTo-8hX7M2XqXhL9i8gwFa98z1qz1Aj9BL4XggpBou0evlp1uEDeq9DqUnfoO7iru8Sh6Re8"
-                            }
-                          }).then(response => response.json())
-                            .then(json => console.log('json', json));
 
                           // TODO:
                             // 1. Query Spotify
@@ -92,7 +170,42 @@ import queryString from 'query-string'
                         },
                         name: 'Link to spotify'
                     }]
-                }
+                },
+
+             tableSelectData: [],
+
+              tableData: [{
+                date: '2016-05-03',
+                name: 'Tom',
+                address: 'No. 189, Grove St, Los Angeles'
+              }, {
+                date: '2016-05-02',
+                name: 'Tom',
+                address: 'No. 189, Grove St, Los Angeles'
+              }, {
+                date: '2016-05-04',
+                name: 'Tom',
+                address: 'No. 189, Grove St, Los Angeles'
+              }, {
+                date: '2016-05-01',
+                name: 'Tom',
+                address: 'No. 189, Grove St, Los Angeles'
+              }],
+              currentRow: null,
+              dialogTableVisible: false,
+              dialogFormVisible: false,
+              form: {
+                name: '',
+                region: '',
+                date1: '',
+                date2: '',
+                delivery: false,
+                type: [],
+                resource: '',
+                desc: ''
+              },
+              formLabelWidth: '120px'
+
             }
         },
         methods: {
@@ -106,7 +219,17 @@ import queryString from 'query-string'
                     },
                     name: 'Edit'
                 }]
-            }
+            },
+          saveSheets(id){
+              console.log('id', id)
+          },
+          setCurrent(row) {
+            this.$refs.singleTable.setCurrentRow(row);
+          },
+          handleCurrentChange(val) {
+            this.currentRow = val;
+          }
+
         }
     }
 </script>

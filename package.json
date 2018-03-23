@@ -10,7 +10,8 @@
   "dependencies": {
     "csvtojson": "^1.1.9",
     "query-string": "^6.0.0",
-    "vue": "^2.5.13"
+    "vue": "^2.5.13",
+    "vue-aplayer": "^1.2.1"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.0.0-beta.6",
